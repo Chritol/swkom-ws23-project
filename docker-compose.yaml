@@ -1,0 +1,17 @@
+version: '3'
+services:
+  frontend:
+    depends_on:
+      - backend
+    image: nginx
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    ports:
+      - "80:80"
+  backend:
+    image: openjdk:17-jdk-slim
+    volumes:
+      - ./server/target:/usr/src/backend
+    command: bash -c "cd /usr/src/backend && java -jar openapi-spring-1.0.jar"
+    ports:
+      - "8080:8080"
