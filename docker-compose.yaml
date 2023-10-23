@@ -12,3 +12,22 @@ services:
       dockerfile: backend/Dockerfile
     ports:
       - "8088:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+  database:
+    image: postgres:15.4
+    container_name: paperless-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=paperless
+      - POSTGRES_PASSWORD=paperless
+      - POSTGRES_DB=paperless
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "paperless" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20

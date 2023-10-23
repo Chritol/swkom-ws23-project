@@ -1,9 +1,6 @@
 package org.openapitools.model;
 
-import java.net.URI;
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.openapitools.model.CreateUISettingsRequestSettingsBulkEdit;
 import org.openapitools.model.CreateUISettingsRequestSettingsDarkMode;
@@ -13,8 +10,7 @@ import org.openapitools.model.CreateUISettingsRequestSettingsNotifications;
 import org.openapitools.model.CreateUISettingsRequestSettingsSavedViews;
 import org.openapitools.model.CreateUISettingsRequestSettingsTheme;
 import org.openapitools.model.CreateUISettingsRequestSettingsUpdateChecking;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.time.OffsetDateTime;
+
 import javax.validation.Valid;
 import javax.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
