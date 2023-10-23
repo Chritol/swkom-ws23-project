@@ -1,10 +1,10 @@
 FROM amazoncorretto:17-alpine-jdk
 
-WORKDIR /backend
+WORKDIR /app
 
 RUN apk --no-cache add maven
 
-COPY server /backend
+COPY backend /app
 
 RUN mvn package -DskipTests
 
