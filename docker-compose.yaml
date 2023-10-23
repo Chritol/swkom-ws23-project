@@ -1,17 +1,14 @@
-version: '3'
+version: '1.0'
 services:
   frontend:
-    depends_on:
-      - backend
-    image: nginx
-    volumes:
-      - ./frontend:/usr/share/nginx/html
+    image: paperless:nginx
+    build:
+      dockerfile: frontend/Dockerfile
     ports:
-      - "80:80"
+      - "8080:80"
   backend:
-    image: openjdk:17-jdk-slim
-    volumes:
-      - ./server/target:/usr/src/backend
-    command: bash -c "cd /usr/src/backend && java -jar openapi-spring-1.0.jar"
+    image: paperless:openjdk
+    build:
+      dockerfile: backend/Dockerfile
     ports:
-      - "8080:8080"
+      - "8088:8080"
