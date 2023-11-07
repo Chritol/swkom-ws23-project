@@ -1,9 +1,10 @@
 package org.openapitools.service;
 
+import org.openapitools.persistence.entities.DocumentsDocument;
 import org.openapitools.persistence.repositories.DocumentsDocumentRepository;
-import org.openapitools.model.Document;
-import org.openapitools.model.ok200.GetDocument200Response;
-import org.openapitools.model.ok200.GetDocuments200Response;
+import org.openapitools.model.DocumentDTO;
+import org.openapitools.model.okresponse.GetDocument200Response;
+import org.openapitools.model.okresponse.GetDocuments200Response;
 import org.openapitools.mapper.DocumentMapper;
 import org.openapitools.mapper.GetDocument200ResponseMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +33,13 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public GetDocument200Response getDocument(Integer id, Integer page, Boolean fullPerms) {
-        Document foundEntity =  documentRepository.getReferenceById(id);
+        DocumentsDocument foundEntity =  documentRepository.getReferenceById(id);
         return getDocument200ResponseMapper.entityToDto(foundEntity);
     }
 
 
     @Override
-    public void uploadDocument(Document documentDTO, List<MultipartFile> document) {
+    public void uploadDocument(DocumentDTO documentDTO, List<MultipartFile> document) {
         // TODO: document variable is unused yet
 
         documentDTO.setCreated(OffsetDateTime.now());
@@ -48,7 +49,7 @@ public class DocumentServiceImpl implements DocumentService {
         documentDTO.setAdded(OffsetDateTime.now());
 
 
-        Document documentToBeSaved = documentMapper.dtoToEntity(documentDTO);
+        DocumentsDocument documentToBeSaved = documentMapper.dtoToEntity(documentDTO);
 
         documentToBeSaved.setChecksum("checksum");
         documentToBeSaved.setStorageType("pdf");
@@ -60,8 +61,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public ResponseEntity<GetDocuments200Response> getDocuments(Integer page, Integer pageSize, String query, String ordering, List<Integer> tagsIdAll, Integer documentTypeId, Integer storagePathIdIn, Integer correspondentId, Boolean truncateContent) {
-        List<Document> documentDTOS = new ArrayList<>();
-        for (Document document : documentRepository.findAll()) {
+        List<DocumentDTO> documentDTOS = new ArrayList<>();
+        for (DocumentsDocument document : documentRepository.findAll()) {
             documentDTOS.add(documentMapper.entityToDto(document));
         }
 

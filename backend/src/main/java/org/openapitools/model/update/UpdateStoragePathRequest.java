@@ -1,16 +1,17 @@
 package org.openapitools.model.update;
 
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.openapitools.model.ok200.GetDocument200ResponsePermissions;
-import org.openapitools.model.ok200.GetStoragePaths200ResponseResultsInnerPermissions;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;
+
+import org.openapitools.model.Permissions;
+import org.openapitools.model.okresponse.GetStoragePaths200ResponseResultsInnerPermissions;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
-import java.util.*;
 import javax.annotation.Generated;
 
 /**
@@ -18,7 +19,7 @@ import javax.annotation.Generated;
  */
 
 @JsonTypeName("UpdateStoragePath_request")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-10-22T09:39:32.151354Z[Etc/UTC]")
+@Generated(value = "com.paperless.codegen.languages.SpringCodegen", date = "2023-10-22T12:32:07.613318Z[Etc/UTC]")
 public class UpdateStoragePathRequest {
 
   private Integer id;
@@ -41,7 +42,7 @@ public class UpdateStoragePathRequest {
 
   private GetStoragePaths200ResponseResultsInnerPermissions permissions;
 
-  private GetDocument200ResponsePermissions setPermissions;
+  private Permissions setPermissions;
 
   private UpdateStoragePathRequestPermissionsForm permissionsForm;
 
@@ -52,7 +53,7 @@ public class UpdateStoragePathRequest {
   /**
    * Constructor with only required parameters
    */
-  public UpdateStoragePathRequest(Integer id, String slug, String name, String path, String match, Integer matchingAlgorithm, Boolean isInsensitive, Integer documentCount, Integer owner, GetStoragePaths200ResponseResultsInnerPermissions permissions, GetDocument200ResponsePermissions setPermissions, UpdateStoragePathRequestPermissionsForm permissionsForm) {
+  public UpdateStoragePathRequest(Integer id, String slug, String name, String path, String match, Integer matchingAlgorithm, Boolean isInsensitive, Integer documentCount, Integer owner, GetStoragePaths200ResponseResultsInnerPermissions permissions, Permissions setPermissions, UpdateStoragePathRequestPermissionsForm permissionsForm) {
     this.id = id;
     this.slug = slug;
     this.name = name;
@@ -267,7 +268,7 @@ public class UpdateStoragePathRequest {
     this.permissions = permissions;
   }
 
-  public UpdateStoragePathRequest setPermissions(GetDocument200ResponsePermissions setPermissions) {
+  public UpdateStoragePathRequest setPermissions(Permissions setPermissions) {
     this.setPermissions = setPermissions;
     return this;
   }
@@ -279,11 +280,11 @@ public class UpdateStoragePathRequest {
   @NotNull @Valid 
   @Schema(name = "set_permissions", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("set_permissions")
-  public GetDocument200ResponsePermissions getSetPermissions() {
+  public Permissions getSetPermissions() {
     return setPermissions;
   }
 
-  public void setSetPermissions(GetDocument200ResponsePermissions setPermissions) {
+  public void setSetPermissions(Permissions setPermissions) {
     this.setPermissions = setPermissions;
   }
 

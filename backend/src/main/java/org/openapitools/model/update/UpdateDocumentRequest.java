@@ -1,16 +1,17 @@
 package org.openapitools.model.update;
 
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import org.openapitools.model.ok200.GetCorrespondents200ResponseResultsInnerPermissions;
-
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
+
+import org.openapitools.model.okresponse.GetCorrespondents200ResponseResultsInnerPermissions;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
-import java.util.*;
 import javax.annotation.Generated;
 
 /**
@@ -18,7 +19,7 @@ import javax.annotation.Generated;
  */
 
 @JsonTypeName("UpdateDocument_request")
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-10-22T09:39:32.151354Z[Etc/UTC]")
+@Generated(value = "com.paperless.codegen.languages.SpringCodegen", date = "2023-10-22T12:32:07.613318Z[Etc/UTC]")
 public class UpdateDocumentRequest {
 
   private Integer id;
@@ -410,6 +411,10 @@ public class UpdateDocumentRequest {
   @JsonProperty("notes")
   public List<Object> getNotes() {
     return notes;
+  }
+
+  public void setNotes(List<Object> notes) {
+    this.notes = notes;
   }
 
   public UpdateDocumentRequest setPermissions(GetCorrespondents200ResponseResultsInnerPermissions setPermissions) {

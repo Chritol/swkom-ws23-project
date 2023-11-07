@@ -1,20 +1,20 @@
 package org.openapitools.model;
 
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
-import java.util.*;
 import javax.annotation.Generated;
 
 /**
  * NewDocumentType
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2023-10-22T09:39:32.151354Z[Etc/UTC]")
+@Generated(value = "com.paperless.codegen.languages.SpringCodegen", date = "2023-10-22T12:32:07.613318Z[Etc/UTC]")
 public class NewDocumentType {
 
   private JsonNullable<String> name = JsonNullable.<String>undefined();

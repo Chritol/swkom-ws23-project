@@ -5,53 +5,17 @@
  */
 package org.openapitools.api;
 
-import org.openapitools.model.ok200.AckTasks200Response;
-import org.openapitools.model.AckTasksRequest;
-import org.openapitools.model.BulkEditRequest;
-import org.openapitools.model.create.CreateCorrespondentRequest;
-import org.openapitools.model.create.CreateDocumentType200Response;
-import org.openapitools.model.create.CreateGroupRequest;
-import org.openapitools.model.create.CreateSavedViewsRequest;
-import org.openapitools.model.create.CreateStoragePath200Response;
-import org.openapitools.model.create.CreateStoragePathRequest;
-import org.openapitools.model.create.CreateTag200Response;
-import org.openapitools.model.create.CreateTagRequest;
-import org.openapitools.model.create.CreateUISettings200Response;
-import org.openapitools.model.create.CreateUISettingsRequest;
-import org.openapitools.model.create.CreateUserRequest;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.openapitools.model.ok200.GetCorrespondents200Response;
-import org.openapitools.model.ok200.GetDocument200Response;
-import org.openapitools.model.ok200.GetDocumentMetadata200Response;
-import org.openapitools.model.ok200.GetDocumentSuggestions200Response;
-import org.openapitools.model.ok200.GetDocumentTypes200Response;
-import org.openapitools.model.ok200.GetDocuments200Response;
-import org.openapitools.model.ok200.GetGroups200Response;
-import org.openapitools.model.ok200.GetSavedViews200Response;
-import org.openapitools.model.ok200.GetStoragePaths200Response;
-import org.openapitools.model.ok200.GetTags200Response;
-import org.openapitools.model.ok200.GetTasks200ResponseInner;
-import org.openapitools.model.ok200.GetUISettings200Response;
-import org.openapitools.model.ok200.GetUsers200Response;
-import org.openapitools.model.ok200.GetUsers200ResponseResultsInner;
+
+
+import org.openapitools.model.*;
+
+import org.openapitools.model.okresponse.*;
+import org.openapitools.model.create.*;
+import org.openapitools.model.update.*;
+
 import java.time.OffsetDateTime;
-import org.openapitools.model.ok200.SelectionData200Response;
-import org.openapitools.model.SelectionDataRequest;
-import org.openapitools.model.ok200.Statistics200Response;
-import org.openapitools.model.ok200.UpdateCorrespondent200Response;
-import org.openapitools.model.update.UpdateCorrespondentRequest;
-import org.openapitools.model.ok200.UpdateDocument200Response;
-import org.openapitools.model.update.UpdateDocumentRequest;
-import org.openapitools.model.ok200.UpdateDocumentType200Response;
-import org.openapitools.model.update.UpdateDocumentTypeRequest;
-import org.openapitools.model.update.UpdateGroup200Response;
-import org.openapitools.model.update.UpdateGroupRequest;
-import org.openapitools.model.ok200.UpdateStoragePath200Response;
-import org.openapitools.model.update.UpdateStoragePathRequest;
-import org.openapitools.model.ok200.UpdateTag200Response;
-import org.openapitools.model.update.UpdateTagRequest;
-import org.openapitools.model.update.UpdateUserRequest;
-import org.openapitools.model.UserInfo;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -1283,7 +1247,7 @@ public interface ApiApi {
         consumes = { "application/json", "text/json", "application/*+json" }
     )
     default ResponseEntity<Void> getToken(
-        @Parameter(name = "UserInfo", description = "") @Valid @RequestBody(required = false) UserInfo userInfo
+        @Parameter(name = "UserInfo", description = "") @Valid @RequestBody(required = false) UserInfoDTO userInfo
     ) {
         return new ResponseEntity<>(HttpStatus.OK);
 

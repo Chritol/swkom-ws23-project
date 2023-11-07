@@ -1,15 +1,15 @@
 package org.openapitools.mapper;
 
-
 import org.openapitools.persistence.entities.*;
 import org.openapitools.persistence.repositories.*;
-import org.openapitools.model.Document;
-import org.openapitools.model.;
+import org.openapitools.model.DocumentDTO;
+import org.openapitools.model.DocumentNoteDTO;
 import org.openapitools.model.Permissions;
 import org.openapitools.model.okresponse.GetDocument200Response;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -21,20 +21,21 @@ import java.util.Set;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Service
 public abstract class DocumentNotesMapper implements BaseMapper<DocumentsNote, DocumentNoteDTO> {
 
     @Autowired
-    private CorrespondentRepository correspondentRepository;
+    private DocumentsCorrespondentRepository correspondentRepository;
     @Autowired
-    private DocumentTypeRepository documentTypeRepository;
+    private DocumentsDocumenttypeRepository documentTypeRepository;
     @Autowired
-    private StoragePathRepository storagePathRepository;
+    private DocumentsStoragepathRepository storagePathRepository;
     @Autowired
-    private UserRepository userRepository;
+    private AuthUserRepository userRepository;
     @Autowired
-    private DocumentTagsRepository documentTagsRepository;
+    private DocumentsDocumentTagsRepository documentTagsRepository;
     @Autowired
-    private DocumentRepository documentRepository;
+    private DocumentsDocumentRepository documentRepository;
 
     @Mapping(target = "document", source = "document", qualifiedByName = "documentDto")
     @Mapping(target = "user", source = "user", qualifiedByName = "userDto")
@@ -50,7 +51,7 @@ public abstract class DocumentNotesMapper implements BaseMapper<DocumentsNote, D
     }
 
     @Named("documentEntity")
-    Integer map(Document document) {
+    Integer map(DocumentsDocument document) {
         return document.getId();
     }
 
@@ -65,7 +66,7 @@ public abstract class DocumentNotesMapper implements BaseMapper<DocumentsNote, D
     }
 
     @Named("documentDto")
-    Document mapDocument(Integer value) {
+    DocumentsDocument mapDocument(Integer value) {
         return documentRepository.findById(value).orElse(null);
     }
 
