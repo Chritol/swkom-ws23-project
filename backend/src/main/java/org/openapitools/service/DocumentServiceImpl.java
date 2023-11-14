@@ -2,11 +2,10 @@ package org.openapitools.service;
 
 import org.openapitools.persistence.entities.DocumentsDocument;
 import org.openapitools.persistence.repositories.DocumentsDocumentRepository;
-import org.openapitools.model.DocumentDTO;
-import org.openapitools.model.okresponse.GetDocument200Response;
-import org.openapitools.model.okresponse.GetDocuments200Response;
-import org.openapitools.mapper.DocumentMapper;
-import org.openapitools.mapper.GetDocument200ResponseMapper;
+import org.openapitools.model.*;
+import org.openapitools.model.okresponse.*;
+import org.openapitools.mapper.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,15 +19,16 @@ import java.util.List;
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentsDocumentRepository documentRepository;
-    @Autowired
-    private DocumentMapper documentMapper;
-    @Autowired
-    private GetDocument200ResponseMapper getDocument200ResponseMapper;
-
+    private final DocumentMapper documentMapper;
+    private final GetDocument200ResponseMapper getDocument200ResponseMapper;
+    private final UpdateDocument200ResponseMapper updateDocument200ResponseMapper;
 
     @Autowired
-    public DocumentServiceImpl(DocumentsDocumentRepository documentRepository) {
+    public DocumentServiceImpl(DocumentsDocumentRepository documentRepository, DocumentMapper documentMapper, GetDocument200ResponseMapper getDocument200ResponseMapper, UpdateDocument200ResponseMapper updateDocument200ResponseMapper){
         this.documentRepository = documentRepository;
+        this.documentMapper = documentMapper;
+        this.getDocument200ResponseMapper = getDocument200ResponseMapper;
+        this.updateDocument200ResponseMapper = updateDocument200ResponseMapper;
     }
 
     @Override
