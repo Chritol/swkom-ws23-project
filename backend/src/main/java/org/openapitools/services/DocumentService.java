@@ -1,8 +1,9 @@
-package org.openapitools.service;
+package org.openapitools.services;
 
 import org.openapitools.model.DocumentDTO;
 import org.openapitools.model.okresponse.GetDocument200Response;
 import org.openapitools.model.okresponse.GetDocuments200Response;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
