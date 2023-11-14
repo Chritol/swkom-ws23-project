@@ -1,126 +1,43 @@
 package org.openapitools.remapper;
 
-
-import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
-
+import org.mapstruct.InheritInverseConfiguration;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.openapitools.jackson.nullable.JsonNullable;
-
-
 import org.openapitools.model.DocumentDTO;
-import org.openapitools.persistence.entities.*;
-import org.openapitools.persistence.repositories.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.openapitools.persistence.entities.DocumentsDocument;
+import org.openapitools.remapper.EntityMapper;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.validation.Valid;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
+@Mapper(componentModel = "spring", uses = {JsonNullableMapper.class})
+public class DocumentMapper implements EntityMapper<DocumentsDocument, DocumentDTO> {
 
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
-        unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-@Service
-public abstract class DocumentMapper implements EntityMapper<DocumentsDocument, DocumentDTO> {
 
-    @Autowired
-    private DocumentsCorrespondentRepository correspondentRepository;
-    @Autowired
-    private DocumentsDocumenttypeRepository documentTypeRepository;
-    @Autowired
-    private DocumentsStoragepathRepository storagePathRepository;
-    @Autowired
-    private AuthUserRepository userRepository;
-    @Autowired
-    private DocumentsDocumentTagsRepository documentTagsRepository;
-
-    @Mapping(target = "correspondent", source = "correspondent", qualifiedByName = "correspondentDto")
-    @Mapping(target = "documentType", source = "documentType", qualifiedByName = "documentTypeDto")
-    @Mapping(target = "storagePath", source = "storagePath", qualifiedByName = "storagePathDto")
-    @Mapping(target = "tags", source = "tags", qualifiedByName = "tagsDto")
-    @Mapping(target = "archiveSerialNumber", source = "archiveSerialNumber", qualifiedByName = "archiveSerialNumberDto")
-    abstract public DocumentsDocument dtoToEntity(DocumentDTO dto);
-
-    @Mapping(target = "correspondent", source = "correspondent", qualifiedByName = "correspondentEntity")
-    @Mapping(target = "documentType", source = "documentType", qualifiedByName = "documentTypeEntity")
-    @Mapping(target = "storagePath", source = "storagePath", qualifiedByName = "storagePathEntity")
-    @Mapping(target = "tags", source = "tags", qualifiedByName = "tagsEntity")
-    @Mapping(target = "createdDate", source = "created", qualifiedByName = "createdToCreatedDate")
-    abstract public DocumentDTO entityToDto(DocumentsDocument entity);
-
-    @Named("correspondentEntity")
-    JsonNullable<Integer> map(DocumentsCorrespondent correspondent) {
-        return correspondent!=null ? JsonNullable.of(correspondent.getId()) : JsonNullable.undefined();
+    @Mapping(target = "id", source = "entity.id")
+    @Mapping(target = "correspondent", source = "entity.correspondent.id")
+    @Mapping(target = "documentType", source = "entity.documentType.id")
+    @Mapping(target = "storagePath", source = "entity.storagePath.id")
+    @Mapping(target = "title", source = "entity.title")
+    @Mapping(target = "content", source = "entity.content")
+    @Mapping(target = "tags", expression = "java(entity.getDocumentDocumentsDocumentTagses().stream().map(DocumentsDocumentTags::getTagId).collect(Collectors.toList()))")
+    @Mapping(target = "created", source = "entity.created")
+    @Mapping(target = "createdDate", ignore = true) // No equivalent in entity
+    @Mapping(target = "modified", source = "entity.modified")
+    @Mapping(target = "added", source = "entity.added")
+    @Mapping(target = "archiveSerialNumber", source = "entity.archiveSerialNumber")
+    @Mapping(target = "originalFileName", source = "entity.originalFilename")
+    @Mapping(target = "archivedFileName", source = "entity.archiveFilename")
+    public DocumentDTO toDto(DocumentsDocument entity) {
+        return null;
     }
 
-    @Named("documentTypeEntity")
-    JsonNullable<Integer> map(DocumentsDocumenttype documentType) {
-        return documentType!=null ? JsonNullable.of(documentType.getId()) : JsonNullable.undefined();
+    @InheritInverseConfiguration
+    public DocumentsDocument toEntity(DocumentDTO documentDTO) {
+        return null;
     }
-
-    @Named("storagePathEntity")
-    JsonNullable<Integer> map(DocumentsStoragepath storagePath) {
-        return storagePath!=null ? JsonNullable.of(storagePath.getId()) : JsonNullable.undefined();
-    }
-
-    @Named("ownerEntity")
-    JsonNullable<Integer> map(AuthUser owner) {
-        return owner!=null ? JsonNullable.of(owner.getId()) : JsonNullable.undefined();
-    }
-
-    @Named("tagsEntity")
-    JsonNullable<List<Integer>> map(Set<DocumentsDocumentTags> tags) {
-        return tags!=null ? JsonNullable.of( tags.stream().map( tag->(int)tag.getId() ).toList() ) : JsonNullable.undefined();
-    }
-
-    // map created to createdDate (Date without the time)
-    @Named("createdToCreatedDate")
-    OffsetDateTime mapCreatedDate(OffsetDateTime value) {
-        return value!=null ? value.withOffsetSameInstant(ZoneOffset.UTC).toLocalDate().atStartOfDay().atOffset(ZoneOffset.UTC) : null;
-    }
-
-    @Named("correspondentDto")
-    DocumentsCorrespondent mapCorrespondent(JsonNullable<Integer> value) {
-        if(value==null || !value.isPresent() || value.get()==null) return null;
-
-        return correspondentRepository.findById(value.get()).orElse(null);
-    }
-
-    @Named("documentTypeDto")
-    DocumentsDocumenttype mapDocumentType(JsonNullable<Integer> value) {
-        if(value==null || !value.isPresent() || value.get()==null) return null;
-
-        return documentTypeRepository.findById(value.get()).orElse(null);
-    }
-
-    @Named("storagePathDto")
-    DocumentsStoragepath mapStoragePath(JsonNullable<Integer> value) {
-        if(value==null || !value.isPresent() || value.get()==null) return null;
-
-        return storagePathRepository.findById(value.get()).orElse(null);
-    }
-
-    @Named("ownerDto")
-    AuthUser mapOwner(JsonNullable<Integer> value) {
-        if(value==null || !value.isPresent() || value.get()==null) return null;
-
-        return userRepository.findById(value.get()).orElse(null);
-    }
-
-    @Named("tagsDto")
-    Set<DocumentsDocumentTags> mapDocTag(JsonNullable<List<Integer>> value) {
-        if(value==null || !value.isPresent() || value.get()==null) return null;
-
-        return new HashSet<DocumentsDocumentTags>(documentTagsRepository.findAllById(value.get()));
-    }
-
-    @Named("archiveSerialNumberDto")
-    Integer mapArchiveSerialNumber(JsonNullable<String> value) {
-        if(value==null || !value.isPresent() || value.get()==null) return null;
-        return Integer.parseInt(value.get());
-    }
-
 }

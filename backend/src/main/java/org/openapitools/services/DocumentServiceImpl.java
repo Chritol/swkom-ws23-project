@@ -3,6 +3,8 @@ package org.openapitools.services;
 import org.openapitools.model.DocumentDTO;
 import org.openapitools.model.okresponse.GetDocument200Response;
 import org.openapitools.model.okresponse.GetDocuments200Response;
+import org.openapitools.persistence.entities.DocumentsDocument;
+import org.openapitools.persistence.entities.DocumentsStoragepath;
 import org.openapitools.persistence.repositories.DocumentsDocumentRepository;
 import org.openapitools.remapper.DocumentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -29,9 +32,18 @@ public class DocumentServiceImpl implements DocumentService {
         return null;
     }
 
-    @Override
-    public void uploadDocument(DocumentDTO documentDTO, List<MultipartFile> document) {
+    public void uploadDocument(DocumentDTO documentDTO, MultipartFile document) {
+        // Convert DTO to entity
+        DocumentsDocument entity = documentMapper.toEntity(documentDTO);
 
+        // Here, handle the file upload logic as required for your application
+        // This can involve saving the file to disk, a database, or another storage service
+
+        // For demonstration purposes, let's assume you have a method to handle the upload:
+        // uploadFile(document, entity.getStoragePath());
+
+        // Print the original filename from the DTO
+        documentDTO.getOriginalFileName().ifPresent(System.out::println);
     }
 
     @Override
