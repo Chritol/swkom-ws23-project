@@ -4,7 +4,7 @@ import org.openapitools.persistence.entities.DocumentsDocument;
 import org.openapitools.persistence.repositories.DocumentsDocumentRepository;
 import org.openapitools.model.*;
 import org.openapitools.model.okresponse.*;
-import org.openapitools.mapper.*;
+import org.openapitools.remapper.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,22 +19,17 @@ import java.util.List;
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentsDocumentRepository documentRepository;
-    private final DocumentMapper documentMapper;
-    private final GetDocument200ResponseMapper getDocument200ResponseMapper;
-    private final UpdateDocument200ResponseMapper updateDocument200ResponseMapper;
 
     @Autowired
-    public DocumentServiceImpl(DocumentsDocumentRepository documentRepository, DocumentMapper documentMapper, GetDocument200ResponseMapper getDocument200ResponseMapper, UpdateDocument200ResponseMapper updateDocument200ResponseMapper){
+    public DocumentServiceImpl(DocumentsDocumentRepository documentRepository){
         this.documentRepository = documentRepository;
-        this.documentMapper = documentMapper;
-        this.getDocument200ResponseMapper = getDocument200ResponseMapper;
-        this.updateDocument200ResponseMapper = updateDocument200ResponseMapper;
     }
 
     @Override
     public GetDocument200Response getDocument(Integer id, Integer page, Boolean fullPerms) {
-        DocumentsDocument foundEntity =  documentRepository.getReferenceById(id);
-        return getDocument200ResponseMapper.entityToDto(foundEntity);
+        //DocumentsDocument foundEntity =  documentRepository.getReferenceById(id);
+        //return getDocument200ResponseMapper.entityToDto(foundEntity);
+        return null;
     }
 
 
@@ -49,7 +44,7 @@ public class DocumentServiceImpl implements DocumentService {
         documentDTO.setAdded(OffsetDateTime.now());
 
 
-        DocumentsDocument documentToBeSaved = documentMapper.dtoToEntity(documentDTO);
+        DocumentsDocument documentToBeSaved = DocumentMapper.INSTANCE.toEntity(documentDTO);
 
         documentToBeSaved.setChecksum("checksum");
         documentToBeSaved.setStorageType("pdf");
@@ -63,7 +58,7 @@ public class DocumentServiceImpl implements DocumentService {
     public ResponseEntity<GetDocuments200Response> getDocuments(Integer page, Integer pageSize, String query, String ordering, List<Integer> tagsIdAll, Integer documentTypeId, Integer storagePathIdIn, Integer correspondentId, Boolean truncateContent) {
         List<DocumentDTO> documentDTOS = new ArrayList<>();
         for (DocumentsDocument document : documentRepository.findAll()) {
-            documentDTOS.add(documentMapper.entityToDto(document));
+            documentDTOS.add(DocumentMapper.INSTANCE.toDto(document));
         }
 
 
