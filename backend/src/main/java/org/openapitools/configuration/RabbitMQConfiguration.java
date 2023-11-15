@@ -12,10 +12,13 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfiguration {
     @Value("${rabbitmq.endpoint}")
     private String endpoint;
+
     @Value("${rabbitmq.username}")
     private String username;
+
     @Value("${rabbitmq.password}")
     private String password;
+
 
     public static final String DOCUMENT_IN_QUEUE = "DOCUMENT_IN_QUEUE";
     public static final String DOCUMENT_OUT_QUEUE = "DOCUMENT_OUT_QUEUE";

@@ -37,7 +37,7 @@ services:
       retries: 20
   rabbitmq:
     image: "rabbitmq:3-management"
-    container_name: paperless-rabitmq
+    container_name: paperless-rabbitmq
     ports:
       - "5672:5672" # RabbitMQ main port
       - "15672:15672" # RabbitMQ management plugin port

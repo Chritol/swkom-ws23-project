@@ -67,8 +67,8 @@ public class ApiApiController implements ApiApi {
                 return ResponseEntity.badRequest().build();
             }
 
-            documentServiceImpl.uploadDocument(documentDTO, file);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            boolean success = documentServiceImpl.uploadDocument(documentDTO, file);
+            return success ? new ResponseEntity<>(HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.UNPROCESSABLE_ENTITY);
 
         } catch (Exception e) {
             e.printStackTrace();
