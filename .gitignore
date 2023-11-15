@@ -29,3 +29,9 @@ replay_pid*
 # Target
 target/
 *.iml
+
+# Postgres
+data/
+pgdata/
+rabbitmqData/
+minioData/
