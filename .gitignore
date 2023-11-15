@@ -33,3 +33,5 @@ target/
 # Postgres
 data/
 pgdata/
+rabbitmqData/
+minioData/
