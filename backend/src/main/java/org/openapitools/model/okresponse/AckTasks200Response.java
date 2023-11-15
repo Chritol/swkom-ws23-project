@@ -1,11 +1,9 @@
-package org.openapitools.model;
+package org.openapitools.model.okresponse;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.ArrayList;
-import java.util.List;
-import javax.validation.Valid;
+
 import javax.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -13,53 +11,44 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import javax.annotation.Generated;
 
 /**
- * AckTasksRequest
+ * AckTasks200Response
  */
 
-@JsonTypeName("AckTasks_request")
+@JsonTypeName("AckTasks_200_response")
 @Generated(value = "com.paperless.codegen.languages.SpringCodegen", date = "2023-10-22T12:32:07.613318Z[Etc/UTC]")
-public class AckTasksRequest {
+public class AckTasks200Response {
 
-  @Valid
-  private List<Integer> tasks = new ArrayList<>();
+  private Integer result;
 
-  public AckTasksRequest() {
+  public AckTasks200Response() {
     super();
   }
 
   /**
    * Constructor with only required parameters
    */
-  public AckTasksRequest(List<Integer> tasks) {
-    this.tasks = tasks;
+  public AckTasks200Response(Integer result) {
+    this.result = result;
   }
 
-  public AckTasksRequest tasks(List<Integer> tasks) {
-    this.tasks = tasks;
-    return this;
-  }
-
-  public AckTasksRequest addTasksItem(Integer tasksItem) {
-    if (this.tasks == null) {
-      this.tasks = new ArrayList<>();
-    }
-    this.tasks.add(tasksItem);
+  public AckTasks200Response result(Integer result) {
+    this.result = result;
     return this;
   }
 
   /**
-   * Get tasks
-   * @return tasks
+   * Get result
+   * @return result
   */
   @NotNull 
-  @Schema(name = "tasks", requiredMode = Schema.RequiredMode.REQUIRED)
-  @JsonProperty("tasks")
-  public List<Integer> getTasks() {
-    return tasks;
+  @Schema(name = "result", requiredMode = Schema.RequiredMode.REQUIRED)
+  @JsonProperty("result")
+  public Integer getResult() {
+    return result;
   }
 
-  public void setTasks(List<Integer> tasks) {
-    this.tasks = tasks;
+  public void setResult(Integer result) {
+    this.result = result;
   }
 
   @Override
@@ -70,20 +59,20 @@ public class AckTasksRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    AckTasksRequest ackTasksRequest = (AckTasksRequest) o;
-    return Objects.equals(this.tasks, ackTasksRequest.tasks);
+    AckTasks200Response ackTasks200Response = (AckTasks200Response) o;
+    return Objects.equals(this.result, ackTasks200Response.result);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(tasks);
+    return Objects.hash(result);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class AckTasksRequest {\n");
-    sb.append("    tasks: ").append(toIndentedString(tasks)).append("\n");
+    sb.append("class AckTasks200Response {\n");
+    sb.append("    result: ").append(toIndentedString(result)).append("\n");
     sb.append("}");
     return sb.toString();
   }

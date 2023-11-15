@@ -1,10 +1,9 @@
-package org.openapitools.model;
+package org.openapitools.model.create;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.ArrayList;
-import java.util.List;
+
 import javax.validation.Valid;
 import javax.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,53 +12,44 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import javax.annotation.Generated;
 
 /**
- * AckTasksRequest
+ * CreateUISettingsRequest
  */
 
-@JsonTypeName("AckTasks_request")
+@JsonTypeName("CreateUISettings_request")
 @Generated(value = "com.paperless.codegen.languages.SpringCodegen", date = "2023-10-22T12:32:07.613318Z[Etc/UTC]")
-public class AckTasksRequest {
+public class CreateUISettingsRequest {
 
-  @Valid
-  private List<Integer> tasks = new ArrayList<>();
+  private CreateUISettingsRequestSettings settings;
 
-  public AckTasksRequest() {
+  public CreateUISettingsRequest() {
     super();
   }
 
   /**
    * Constructor with only required parameters
    */
-  public AckTasksRequest(List<Integer> tasks) {
-    this.tasks = tasks;
+  public CreateUISettingsRequest(CreateUISettingsRequestSettings settings) {
+    this.settings = settings;
   }
 
-  public AckTasksRequest tasks(List<Integer> tasks) {
-    this.tasks = tasks;
-    return this;
-  }
-
-  public AckTasksRequest addTasksItem(Integer tasksItem) {
-    if (this.tasks == null) {
-      this.tasks = new ArrayList<>();
-    }
-    this.tasks.add(tasksItem);
+  public CreateUISettingsRequest settings(CreateUISettingsRequestSettings settings) {
+    this.settings = settings;
     return this;
   }
 
   /**
-   * Get tasks
-   * @return tasks
+   * Get settings
+   * @return settings
   */
-  @NotNull 
-  @Schema(name = "tasks", requiredMode = Schema.RequiredMode.REQUIRED)
-  @JsonProperty("tasks")
-  public List<Integer> getTasks() {
-    return tasks;
+  @NotNull @Valid 
+  @Schema(name = "settings", requiredMode = Schema.RequiredMode.REQUIRED)
+  @JsonProperty("settings")
+  public CreateUISettingsRequestSettings getSettings() {
+    return settings;
   }
 
-  public void setTasks(List<Integer> tasks) {
-    this.tasks = tasks;
+  public void setSettings(CreateUISettingsRequestSettings settings) {
+    this.settings = settings;
   }
 
   @Override
@@ -70,20 +60,20 @@ public class AckTasksRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    AckTasksRequest ackTasksRequest = (AckTasksRequest) o;
-    return Objects.equals(this.tasks, ackTasksRequest.tasks);
+    CreateUISettingsRequest createUISettingsRequest = (CreateUISettingsRequest) o;
+    return Objects.equals(this.settings, createUISettingsRequest.settings);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(tasks);
+    return Objects.hash(settings);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class AckTasksRequest {\n");
-    sb.append("    tasks: ").append(toIndentedString(tasks)).append("\n");
+    sb.append("class CreateUISettingsRequest {\n");
+    sb.append("    settings: ").append(toIndentedString(settings)).append("\n");
     sb.append("}");
     return sb.toString();
   }

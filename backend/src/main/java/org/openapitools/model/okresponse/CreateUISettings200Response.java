@@ -1,11 +1,9 @@
-package org.openapitools.model;
+package org.openapitools.model.okresponse;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.ArrayList;
-import java.util.List;
-import javax.validation.Valid;
+
 import javax.validation.constraints.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -13,53 +11,44 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import javax.annotation.Generated;
 
 /**
- * AckTasksRequest
+ * CreateUISettings200Response
  */
 
-@JsonTypeName("AckTasks_request")
+@JsonTypeName("CreateUISettings_200_response")
 @Generated(value = "com.paperless.codegen.languages.SpringCodegen", date = "2023-10-22T12:32:07.613318Z[Etc/UTC]")
-public class AckTasksRequest {
+public class CreateUISettings200Response {
 
-  @Valid
-  private List<Integer> tasks = new ArrayList<>();
+  private Boolean success;
 
-  public AckTasksRequest() {
+  public CreateUISettings200Response() {
     super();
   }
 
   /**
    * Constructor with only required parameters
    */
-  public AckTasksRequest(List<Integer> tasks) {
-    this.tasks = tasks;
+  public CreateUISettings200Response(Boolean success) {
+    this.success = success;
   }
 
-  public AckTasksRequest tasks(List<Integer> tasks) {
-    this.tasks = tasks;
-    return this;
-  }
-
-  public AckTasksRequest addTasksItem(Integer tasksItem) {
-    if (this.tasks == null) {
-      this.tasks = new ArrayList<>();
-    }
-    this.tasks.add(tasksItem);
+  public CreateUISettings200Response success(Boolean success) {
+    this.success = success;
     return this;
   }
 
   /**
-   * Get tasks
-   * @return tasks
+   * Get success
+   * @return success
   */
   @NotNull 
-  @Schema(name = "tasks", requiredMode = Schema.RequiredMode.REQUIRED)
-  @JsonProperty("tasks")
-  public List<Integer> getTasks() {
-    return tasks;
+  @Schema(name = "success", requiredMode = Schema.RequiredMode.REQUIRED)
+  @JsonProperty("success")
+  public Boolean getSuccess() {
+    return success;
   }
 
-  public void setTasks(List<Integer> tasks) {
-    this.tasks = tasks;
+  public void setSuccess(Boolean success) {
+    this.success = success;
   }
 
   @Override
@@ -70,20 +59,20 @@ public class AckTasksRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    AckTasksRequest ackTasksRequest = (AckTasksRequest) o;
-    return Objects.equals(this.tasks, ackTasksRequest.tasks);
+    CreateUISettings200Response createUISettings200Response = (CreateUISettings200Response) o;
+    return Objects.equals(this.success, createUISettings200Response.success);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(tasks);
+    return Objects.hash(success);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class AckTasksRequest {\n");
-    sb.append("    tasks: ").append(toIndentedString(tasks)).append("\n");
+    sb.append("class CreateUISettings200Response {\n");
+    sb.append("    success: ").append(toIndentedString(success)).append("\n");
     sb.append("}");
     return sb.toString();
   }
