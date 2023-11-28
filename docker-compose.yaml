@@ -19,6 +19,21 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_started
+  ocr:
+    image: ocr:openjdk
+    build:
+      dockerfile: paperlessOCR/Dockerfile
+    ports:
+      - "6969:6969"
+    depends_on:
+      database:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      backend:
+        condition: service_started
   database:
     image: postgres:15.4
     container_name: paperless-postgres
