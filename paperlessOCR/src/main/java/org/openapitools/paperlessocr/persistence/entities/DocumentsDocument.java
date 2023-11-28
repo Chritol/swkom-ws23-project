@@ -1,12 +1,12 @@
 package org.openapitools.paperlessocr.persistence.entities;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.Set;
-
 
 @Entity
 @Getter
@@ -20,8 +20,7 @@ public class DocumentsDocument {
             sequenceName = "primary_sequence",
             allocationSize = 1,
             initialValue = 10000
-    )
-    @GeneratedValue(
+    )    @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
             generator = "primary_sequence"
     )

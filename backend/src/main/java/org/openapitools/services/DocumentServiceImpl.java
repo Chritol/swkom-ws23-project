@@ -90,14 +90,16 @@ public class DocumentServiceImpl implements DocumentService {
         storagepathRepository.save(entity.getStoragePath());
         Integer id = documentRepository.save(entity).getId();
 
+        log.info(id+"");
+
+        String filePath = bucketName + "/" + id.toString() + "-" + minioObjectName;
+
         try {
-            storeInMinIO(document, id);
+            storeInMinIO(document, filePath);
         } catch (ServerException | InsufficientDataException | ErrorResponseException | IOException | NoSuchAlgorithmException | InvalidKeyException | InvalidResponseException | XmlParserException | InternalException e) {
             log.error(e.getMessage(), e);
             return false;
         }
-
-        String filePath = bucketName + "/" + minioObjectName;
 
         //Everything I need to set before saving! :3
         entity.setCreated(OffsetDateTime.now());
@@ -119,17 +121,17 @@ public class DocumentServiceImpl implements DocumentService {
         return null;
     }
 
-    private void storeInMinIO(MultipartFile file, Integer id) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    private void storeInMinIO(MultipartFile file, String path) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
 
         minioClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(bucketName)
-                        .object(id.toString())
+                        .object(path)
                         .stream(file.getInputStream(), file.getSize(), -1)
                         .contentType(file.getContentType())
                         .build()
         );
-        log.info("Stored object in minIO: " + id);
+        log.info("Stored object in minIO: " + path);
     }
 
     private static String getMinioObjectName(String fileName) throws InvalidParameterException {
