@@ -81,8 +81,17 @@ public class DocumentServiceImpl implements DocumentService {
             return false;
         }
 
+        //Everything I need to set before saving! :3
+        entity.setCreated(OffsetDateTime.now());
+        entity.setModified(OffsetDateTime.now());
+        entity.setAdded(OffsetDateTime.now());
+        entity.setStoragePath(getDocumentStoragePath("",""));
+
+        storagepathRepository.save(entity.getStoragePath());
+        Integer id = documentRepository.save(entity).getId();
+
         try {
-            storeInMinIO(document, minioObjectName);
+            storeInMinIO(document, id);
         } catch (ServerException | InsufficientDataException | ErrorResponseException | IOException | NoSuchAlgorithmException | InvalidKeyException | InvalidResponseException | XmlParserException | InternalException e) {
             log.error(e.getMessage(), e);
             return false;
@@ -94,6 +103,7 @@ public class DocumentServiceImpl implements DocumentService {
         entity.setCreated(OffsetDateTime.now());
         entity.setModified(OffsetDateTime.now());
         entity.setAdded(OffsetDateTime.now());
+        entity.setId(id);
         entity.setStoragePath(getDocumentStoragePath(filePath, document.getOriginalFilename()));
 
         storagepathRepository.save(entity.getStoragePath());
