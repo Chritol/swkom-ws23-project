@@ -26,11 +26,18 @@ public class OcrServiceWorkerImpl implements OcrServiceWorker {
     }
 
     @RabbitListener(queues = RabbitMqConstants.DOCUMENT_IN_QUEUE)
-    public void processDocumentUpload(String pdfFileName) {
+    public void processDocumentUpload(String id) {
         // Fetch the original PDF-document from MinIO
         // Perform OCR recognition
         // Store the text result in PostgreSQL
-        log.info("Receives from queue: " + pdfFileName);
-        ocrServiceImpl.performOcr(pdfFileName);
+        Integer pd_id = 0;
+        try {
+            pd_id = Integer.parseInt(id);
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+        }
+
+        log.info("Receives from queue: " + pd_id);
+        ocrServiceImpl.performOcr(pd_id);
     }
 }

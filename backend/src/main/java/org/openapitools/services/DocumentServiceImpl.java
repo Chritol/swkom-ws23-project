@@ -86,16 +86,17 @@ public class DocumentServiceImpl implements DocumentService {
         return null;
     }
 
-    private void storeInMinIO(MultipartFile file, String filePath) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    private void storeInMinIO(MultipartFile file, Integer id) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+
         minioClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(bucketName)
-                        .object(filePath)
+                        .object(id.toString())
                         .stream(file.getInputStream(), file.getSize(), -1)
                         .contentType(file.getContentType())
                         .build()
         );
-        log.info("Stored object in minIO: " + filePath);
+        log.info("Stored object in minIO: " + id);
     }
 
     private static String getMinioObjectName(String fileName) throws InvalidParameterException {

@@ -9,6 +9,8 @@ import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.openapitools.paperlessocr.persistence.entities.DocumentsDocument;
+import org.openapitools.paperlessocr.persistence.repositories.DocumentsDocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,29 +19,35 @@ import java.io.*;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.NoSuchElementException;
 
 @Service
 @Slf4j
 public class OcrServiceImpl implements OcrService {
     private final MinioClient minioClient;
+    private final DocumentsDocumentRepository documentRepository;
 
     @Autowired
-    public OcrServiceImpl(MinioClient minioClient) {
+    public OcrServiceImpl(MinioClient minioClient, DocumentsDocumentRepository documentRepository) {
         this.minioClient = minioClient;
+        this.documentRepository = documentRepository;
     }
 
     @Value("${minio.bucketName}")
     private String bucketName;
 
-    public void performOcr(String pdfFileName) {
+    public void performOcr(Integer id) throws NoSuchElementException {
+        DocumentsDocument document = documentRepository.findById(id).orElseThrow();
+
+        String pdfFileName = document.getTitle();
+
         byte[] pdfData = getPdfData(pdfFileName);
         String result = performOcrOnPdf(pdfData);
 
-        // Store the text result in PostgreSQL
-        /*TextResult textResult = new TextResult();
-        textResult.setPdfFileName(pdfFileName);
-        textResult.setTextResult(result);
-        textResultRepository.save(textResult);*/
+        document.setContent(result);
+
+        documentRepository.save(document);
+
 
         if(result.isEmpty())
             log.info("SAD:(");
