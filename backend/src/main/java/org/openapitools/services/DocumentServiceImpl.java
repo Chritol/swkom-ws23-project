@@ -101,6 +101,7 @@ public class DocumentServiceImpl implements DocumentService {
             return false;
         }
 
+
         //Everything I need to set before saving! :3
         entity.setCreated(OffsetDateTime.now());
         entity.setModified(OffsetDateTime.now());
