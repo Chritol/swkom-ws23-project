@@ -15,7 +15,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @ComponentScan(
         basePackages = {"org.openapitools", "org.openapitools.api" , "org.openapitools.configuration", "org.openapitools.services", "org.openapitools.remapper", "org.openapitools.services", "org.openapitools.persistence.entities", "org.openapitools.persistence.repositories"},
         nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class
-)@EnableJpaRepositories("org.openapitools.persistence.repositories")
+)
+@EnableJpaRepositories("org.openapitools.persistence.repositories")
 public class OpenApiGeneratorApplication {
 
     public static void main(String[] args) {
