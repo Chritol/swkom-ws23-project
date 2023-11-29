@@ -9,37 +9,52 @@ import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.openapitools.paperlessocr.persistence.entities.DocumentsDocument;
+import org.openapitools.paperlessocr.persistence.repositories.DocumentsDocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.NoSuchElementException;
 
 @Service
 @Slf4j
 public class OcrServiceImpl implements OcrService {
     private final MinioClient minioClient;
+    private final DocumentsDocumentRepository documentRepository;
 
     @Autowired
-    public OcrServiceImpl(MinioClient minioClient) {
+    public OcrServiceImpl(MinioClient minioClient, DocumentsDocumentRepository documentRepository) {
         this.minioClient = minioClient;
+        this.documentRepository = documentRepository;
     }
 
     @Value("${minio.bucketName}")
     private String bucketName;
 
-    public void performOcr(String pdfFileName) {
+    public void performOcr(Integer id) {
+        DocumentsDocument document = documentRepository.findById(id).orElse(null);
+
+        if ( document == null ) {
+            log.error("null in " + id);
+            return;
+        }
+
+        String pdfFileName = document.getStoragePath().getPath();
+        log.info(pdfFileName);
+
         byte[] pdfData = getPdfData(pdfFileName);
         String result = performOcrOnPdf(pdfData);
 
-        // Store the text result in PostgreSQL
-        /*TextResult textResult = new TextResult();
-        textResult.setPdfFileName(pdfFileName);
-        textResult.setTextResult(result);
-        textResultRepository.save(textResult);*/
+        document.setContent(result);
+
+        documentRepository.save(document);
+
 
         if(result.isEmpty())
             log.info("SAD:(");
@@ -67,13 +82,15 @@ public class OcrServiceImpl implements OcrService {
         String[] bucketAndFileName = extractBucketAndFileName(pdfFilePath);
         if(bucketAndFileName == null) return null;
 
+        log.info(bucketAndFileName[0] +", "+ bucketAndFileName[1]);
+
         String bucketName = bucketAndFileName[0];
         String fileName = bucketAndFileName[1];
 
         try (InputStream stream = minioClient.getObject(
                 GetObjectArgs.builder()
                         .bucket(bucketName)
-                        .object(fileName)
+                        .object(pdfFilePath)
                         .build())) {
 
             return stream.readAllBytes();
