@@ -8,6 +8,7 @@ import org.openapitools.model.DocumentDTO;
 import org.openapitools.model.DocumentNoteDTO;
 import org.openapitools.model.Permissions;
 import org.openapitools.model.okresponse.GetDocument200Response;
+import org.openapitools.model.okresponse.GetDocuments200ResponseResultsInner;
 import org.openapitools.persistence.entities.*;
 import org.openapitools.persistence.repositories.DocumentsCorrespondentRepository;
 import org.openapitools.persistence.repositories.DocumentsDocumenttypeRepository;
@@ -35,9 +36,10 @@ public class DocumentMapper {
                 .id(entity.getId());
 
         dto     //externals
-                .correspondent(entity.getCorrespondent().getId())
-                .documentType(entity.getDocumentType().getId())
-                .storagePath(entity.getStoragePath().getId());
+                .correspondent(entity.getCorrespondent() != null ? entity.getCorrespondent().getId() : 0)
+                .documentType(entity.getDocumentType() != null ? entity.getDocumentType().getId() : 0)
+                .storagePath(entity.getStoragePath() != null ? entity.getStoragePath().getId() : 0);
+
 
         dto     //content
                 .title(entity.getTitle())
@@ -73,9 +75,10 @@ public class DocumentMapper {
                 .id(entity.getId());
 
         dto     //externals
-                .correspondent(entity.getCorrespondent().getId())
-                .documentType(entity.getDocumentType().getId())
-                .storagePath(entity.getStoragePath().getId());
+                .correspondent(entity.getCorrespondent() != null ? entity.getCorrespondent().getId() : 0)
+                .documentType(entity.getDocumentType() != null ? entity.getDocumentType().getId() : 0)
+                .storagePath(entity.getStoragePath() != null ? entity.getStoragePath().getId() : 0);
+
 
         dto     //content
                 .title(entity.getTitle())
@@ -104,8 +107,55 @@ public class DocumentMapper {
         Permissions permissions = new Permissions();
 
         dto     //permissions
-                .owner(entity.getOwner().getId())
+                .owner(entity.getOwner() != null ? entity.getOwner().getId() : 0)
                 .permissions(permissions);
+
+        entity.getDocumentDocumentsNotes();
+        dto     //notes
+                .notes(new ArrayList<DocumentNoteDTO>());
+
+
+        return dto;
+    }
+
+    public static GetDocuments200ResponseResultsInner toOkInnerRes(DocumentsDocument entity) {
+        GetDocuments200ResponseResultsInner dto = new GetDocuments200ResponseResultsInner();
+
+        dto     //id
+                .id(entity.getId());
+
+        dto     //externals
+                .correspondent(entity.getCorrespondent() != null ? entity.getCorrespondent().getId() : 0)
+                .documentType(entity.getDocumentType() != null ? entity.getDocumentType().getId() : 0)
+                .storagePath(entity.getStoragePath() != null ? entity.getStoragePath().getId() : 0);
+
+
+        dto     //content
+                .title(entity.getTitle())
+                .content(entity.getContent());
+
+        Set<DocumentsDocumentTags> tagEntities = entity.getDocumentDocumentsDocumentTagses();
+        List<Integer> tagIds = new ArrayList<Integer>();
+        for (DocumentsDocumentTags tagEntity : tagEntities) {
+            tagIds.add(tagEntity.getId());
+        }
+        dto     //tags
+                .tags(tagIds);
+
+        dto     //dateTime
+                .created(entity.getCreated().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                .createdDate(entity.getCreated().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                .modified(entity.getModified().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                .added(entity.getAdded().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+
+        dto     //file
+                .archiveSerialNumber(entity.getArchiveSerialNumber())
+                .originalFileName(entity.getOriginalFilename())
+                .archivedFileName(entity.getArchiveFilename());
+
+        dto     //owner and userCanChange
+                .owner(entity.getOwner() != null ? entity.getOwner().getId() : 0)
+                .userCanChange(false);
 
         entity.getDocumentDocumentsNotes();
         dto     //notes
@@ -222,4 +272,8 @@ public class DocumentMapper {
 
         return entity;
     }
+
+
 }
+
+
