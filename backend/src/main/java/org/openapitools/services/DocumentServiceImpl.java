@@ -10,7 +10,10 @@ import org.openapitools.model.okresponse.GetDocument200Response;
 import org.openapitools.model.okresponse.GetDocuments200Response;
 import org.openapitools.persistence.entities.DocumentsDocument;
 import org.openapitools.persistence.entities.DocumentsStoragepath;
+import org.openapitools.persistence.repositories.DocumentsCorrespondentRepository;
 import org.openapitools.persistence.repositories.DocumentsDocumentRepository;
+import org.openapitools.persistence.repositories.DocumentsDocumenttypeRepository;
+import org.openapitools.persistence.repositories.DocumentsStoragepathRepository;
 import org.openapitools.remapper.DocumentMapper;
 import org.openapitools.services.rabbitMq.RabbitMqSender;
 import org.openapitools.services.rabbitMq.RabbitMqSenderImpl;
@@ -24,6 +27,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -31,7 +35,12 @@ import java.util.List;
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentsDocumentRepository documentRepository;
-    private final DocumentMapper documentMapper;
+
+    private final DocumentsCorrespondentRepository correspondentRepository;
+    private final DocumentsDocumenttypeRepository doctypeRepository;
+    private final DocumentsStoragepathRepository storagepathRepository;
+
+
     private final MinioClient minioClient;
 
     private final RabbitMqSender rabbitMQSender;
@@ -40,21 +49,29 @@ public class DocumentServiceImpl implements DocumentService {
     private String bucketName;
 
     @Autowired
-    public DocumentServiceImpl(DocumentsDocumentRepository documentRepository, DocumentMapper documentMapper, MinioClient minioClient, RabbitMqSenderImpl rabbitMQSender) {
+    public DocumentServiceImpl(DocumentsDocumentRepository documentRepository, DocumentsCorrespondentRepository correspondentRepository, DocumentsDocumenttypeRepository doctypeRepository, DocumentsStoragepathRepository storagepathRepository, MinioClient minioClient, RabbitMqSenderImpl rabbitMQSender) {
         this.documentRepository = documentRepository;
-        this.documentMapper = documentMapper;
+        this.correspondentRepository = correspondentRepository;
+        this.doctypeRepository = doctypeRepository;
+        this.storagepathRepository = storagepathRepository;
         this.minioClient = minioClient;
         this.rabbitMQSender = rabbitMQSender;
     }
 
     @Override
     public GetDocument200Response getDocument(Integer id, Integer page, Boolean fullPerms) {
-        return null;
+        //DocumentsDocument entity = documentRepository.getReferenceById(id);
+        //GetDocument200Response response = DocumentMapper.toOkRes(entity);
+
+        return new GetDocument200Response();
     }
+
 
     public boolean uploadDocument(DocumentDTO documentDTO, MultipartFile document) {
         // Convert DTO to entity
-        DocumentsDocument entity = documentMapper.toEntity(documentDTO);
+        DocumentsDocument entity = DocumentMapper.toEntity(documentDTO, correspondentRepository, doctypeRepository, storagepathRepository);
+        System.out.println(documentDTO.toString());
+        log.info(documentDTO.toString());
 
         String minioObjectName = "";
         try {
@@ -64,19 +81,38 @@ public class DocumentServiceImpl implements DocumentService {
             return false;
         }
 
+        //Everything I need to set before saving! :3
+        entity.setCreated(OffsetDateTime.now());
+        entity.setModified(OffsetDateTime.now());
+        entity.setAdded(OffsetDateTime.now());
+        entity.setStoragePath(getDocumentStoragePath("",""));
+
+        storagepathRepository.save(entity.getStoragePath());
+        Integer id = documentRepository.save(entity).getId();
+
+        log.info(id+"");
+
+        String filePath = bucketName + "/" + id.toString() + "-" + minioObjectName;
+
         try {
-            storeInMinIO(document, minioObjectName);
+            storeInMinIO(document, filePath);
         } catch (ServerException | InsufficientDataException | ErrorResponseException | IOException | NoSuchAlgorithmException | InvalidKeyException | InvalidResponseException | XmlParserException | InternalException e) {
             log.error(e.getMessage(), e);
             return false;
         }
 
-        String filePath = bucketName + "/" + minioObjectName;
-        //entity.setStoragePath(getDocumentStoragePath(filePath, document.getOriginalFilename()));
 
+        //Everything I need to set before saving! :3
+        entity.setCreated(OffsetDateTime.now());
+        entity.setModified(OffsetDateTime.now());
+        entity.setAdded(OffsetDateTime.now());
+        entity.setId(id);
+        entity.setStoragePath(getDocumentStoragePath(filePath, document.getOriginalFilename()));
 
-        //rabbitMQSender.sendToDocumentInQueue(entity.getStoragePath().getPath());
-        rabbitMQSender.sendToDocumentInQueue(getDocumentStoragePath(filePath, document.getOriginalFilename()).getPath());
+        storagepathRepository.save(entity.getStoragePath());
+        documentRepository.save(entity);
+
+        rabbitMQSender.sendToDocumentInQueue(entity.getStoragePath().getPath());
         documentDTO.getOriginalFileName().ifPresent(System.out::println);
         return true;
     }
@@ -86,16 +122,17 @@ public class DocumentServiceImpl implements DocumentService {
         return null;
     }
 
-    private void storeInMinIO(MultipartFile file, String filePath) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    private void storeInMinIO(MultipartFile file, String path) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+
         minioClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(bucketName)
-                        .object(filePath)
+                        .object(path)
                         .stream(file.getInputStream(), file.getSize(), -1)
                         .contentType(file.getContentType())
                         .build()
         );
-        log.info("Stored object in minIO: " + filePath);
+        log.info("Stored object in minIO: " + path);
     }
 
     private static String getMinioObjectName(String fileName) throws InvalidParameterException {
