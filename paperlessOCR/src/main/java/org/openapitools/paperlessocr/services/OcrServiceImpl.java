@@ -62,10 +62,6 @@ public class OcrServiceImpl implements OcrService {
 
         documentRepository.save(document);
         elasticsearchService.addDocument(convertToElasticDocumentDocument(document));
-
-        if(result.isEmpty())
-            log.info("SAD:(");
-        log.info(result);
     }
 
     private String[] extractBucketAndFileName(String pdfFileName) {
@@ -159,7 +155,7 @@ public class OcrServiceImpl implements OcrService {
                 .id(document.getId())
                 .title(document.getTitle())
                 .content(document.getContent())
-                .filename(document.getFilename())
+                .filename(document.getStoragePath().getPath())
                 .build();
     }
 }

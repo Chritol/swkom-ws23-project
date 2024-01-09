@@ -21,6 +21,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService{
     @Override
     public void addDocument(ElasticDocumentDocument document) {
         elasticDocumentDocumentRepository.save(document);
+        log.info("Document added to Elasticsearch: " + document);
     }
 
     @Override
