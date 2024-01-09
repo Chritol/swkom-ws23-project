@@ -130,7 +130,7 @@ public class OcrServiceImpl implements OcrService {
         }
     }
 
-    private static void deleteTempFile(File tempPdfFile) {
+    public static void deleteTempFile(File tempPdfFile) {
         try {
             Files.deleteIfExists(tempPdfFile.toPath());
         } catch (IOException e) {
@@ -139,7 +139,7 @@ public class OcrServiceImpl implements OcrService {
     }
 
     @Nullable
-    private static File createTempFile() {
+    public static File createTempFile() {
         File tempPdfFile;
         try {
             tempPdfFile = File.createTempFile("input", ".pdf");
