@@ -40,6 +40,8 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.openapitools.helpers.FileHelper.*;
+
 @Service
 @Slf4j
 public class DocumentServiceImpl implements DocumentService {
@@ -50,12 +52,11 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentsDocumenttypeRepository doctypeRepository;
     private final DocumentsStoragepathRepository storagepathRepository;
 
-    private final ElasticDocumentDocumentRepository elasticDocumentDocumentRepository;
-
+    private final ElasticsearchService elasticsearchService;
 
     private final MinioClient minioClient;
-
     private final RabbitMqSender rabbitMQSender;
+
 
     @Value("${minio.bucketName}")
     private String bucketName;
@@ -68,26 +69,23 @@ public class DocumentServiceImpl implements DocumentService {
             DocumentsStoragepathRepository storagepathRepository,
             MinioClient minioClient,
             RabbitMqSenderImpl rabbitMQSender,
-            ElasticDocumentDocumentRepository elasticDocumentDocumentRepository) {
+            ElasticsearchService elasticsearchService) {
         this.documentRepository = documentRepository;
         this.correspondentRepository = correspondentRepository;
         this.doctypeRepository = doctypeRepository;
         this.storagepathRepository = storagepathRepository;
         this.minioClient = minioClient;
         this.rabbitMQSender = rabbitMQSender;
-        this.elasticDocumentDocumentRepository = elasticDocumentDocumentRepository;
+        this.elasticsearchService = elasticsearchService;
+
+        log.info("DocumentServiceImpl created");
     }
 
     @Override
     public GetDocument200Response getDocument(Integer id, Integer page, Boolean fullPerms) {
         DocumentsDocument entity = documentRepository.getReferenceById(id);
-        GetDocument200Response response = DocumentMapper.toOkRes(entity);
 
-        return response;
-    }
-
-    private static String removeUnwantedChars(String text){
-        return text.replaceAll("[^(\\x00-\\xFF)]+(?:$|\\s*)", "").trim();
+        return DocumentMapper.toOkRes(entity);
     }
 
 
@@ -189,12 +187,15 @@ public class DocumentServiceImpl implements DocumentService {
         searchTemplate.setStoragePath(storagePath); // Assuming a default value is not needed or create a new DocumentsStoragepath instance
         searchTemplate.setOwner(null); // Assuming a default value is not needed or create a new AuthUser instance
 
-
         ///no search and elastic search
         List<DocumentsDocument> alldocs = documentRepository.findAll(Example.of(searchTemplate));
 
         if(query != null && !query.isEmpty()) {
-            List<ElasticDocumentDocument> elasticResult = elasticDocumentDocumentRepository.fuzzySearch(query, Pageable.ofSize(pageSize == null ? 10 : pageSize)).getContent();
+            List<ElasticDocumentDocument> elasticResult = elasticsearchService.fuzzySearch(
+                    query,
+                    page == null ? 0 : page,
+                    pageSize == null ? 10 : pageSize).getContent();
+
             for (ElasticDocumentDocument doc : elasticResult) {
                 DocumentsDocument dbResult = documentRepository.findById(doc.getId()).orElse(null);
                 if (dbResult != null) {
@@ -255,35 +256,23 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public String getResourcePath(Integer id) {
         DocumentsDocument doc = documentRepository.findById(id).orElseThrow();
-        String path = doc.getStoragePath().getPath();
 
-        return path;
-    }
-
-    private String[] extractBucketAndFileName(String pdfFileName) {
-        // Assuming the format is "bucketName/path/to/file.pdf"
-        String[] parts = pdfFileName.split("/", 2);
-
-        if (parts.length > 1) {
-            return parts;
-        } else {
-            return null;
-        }
+        return doc.getStoragePath().getPath();
     }
 
     public byte[] getPdfData(String pdfFilePath) {
         if(!pdfFilePath.endsWith(".pdf")) {
             log.info("Only pdf files are currently supported for OCR. File not processable: " + pdfFilePath);
-            //return null;
         }
 
         String[] bucketAndFileName = extractBucketAndFileName(pdfFilePath);
-        //if(bucketAndFileName == null) return null;
+        if(bucketAndFileName == null) {
+            log.info("Could not extract bucket and file name from: " + pdfFilePath);
+            return null;
+        }
 
         log.info(bucketAndFileName[0] +", "+ bucketAndFileName[1]);
-
         String bucketName = bucketAndFileName[0];
-        String fileName = bucketAndFileName[1];
 
         try (InputStream stream = minioClient.getObject(
                 GetObjectArgs.builder()
@@ -300,7 +289,6 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private void storeInMinIO(MultipartFile file, String path) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-
         minioClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(bucketName)
@@ -311,26 +299,4 @@ public class DocumentServiceImpl implements DocumentService {
         );
         log.info("Stored object in minIO: " + path);
     }
-
-    private static String getMinioObjectName(String fileName) throws InvalidParameterException {
-        return FileHelper.getCurrentDateTimeInMilliseconds()
-                + "_"
-                + FileHelper.getFileName(fileName)
-                + "."
-                + FileHelper.getFileExtension(fileName);
-    }
-
-    private static DocumentsStoragepath getDocumentStoragePath(String filePath, String fileName) {
-        DocumentsStoragepath storagePath = new DocumentsStoragepath();
-        storagePath.setPath(removeUnwantedChars(filePath));
-        storagePath.setName(fileName);
-        storagePath.setMatch("");
-        storagePath.setMatchingAlgorithm(0);
-        storagePath.setIsInsensitive(false);
-
-        return storagePath;
-    }
-
-
-
 }
