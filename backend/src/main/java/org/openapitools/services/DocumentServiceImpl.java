@@ -10,6 +10,8 @@ import org.openapitools.model.DocumentDTO;
 import org.openapitools.model.okresponse.GetDocument200Response;
 import org.openapitools.model.okresponse.GetDocuments200Response;
 import org.openapitools.model.okresponse.GetDocuments200ResponseResultsInner;
+import org.openapitools.persistence.elasticsearch.entities.ElasticDocumentDocument;
+import org.openapitools.persistence.elasticsearch.repositories.ElasticDocumentDocumentRepository;
 import org.openapitools.persistence.entities.DocumentsCorrespondent;
 import org.openapitools.persistence.entities.DocumentsDocument;
 import org.openapitools.persistence.entities.DocumentsDocumenttype;
@@ -24,6 +26,8 @@ import org.openapitools.services.rabbitMq.RabbitMqSenderImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,6 +50,8 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentsDocumenttypeRepository doctypeRepository;
     private final DocumentsStoragepathRepository storagepathRepository;
 
+    private final ElasticDocumentDocumentRepository elasticDocumentDocumentRepository;
+
 
     private final MinioClient minioClient;
 
@@ -55,13 +61,21 @@ public class DocumentServiceImpl implements DocumentService {
     private String bucketName;
 
     @Autowired
-    public DocumentServiceImpl(DocumentsDocumentRepository documentRepository, DocumentsCorrespondentRepository correspondentRepository, DocumentsDocumenttypeRepository doctypeRepository, DocumentsStoragepathRepository storagepathRepository, MinioClient minioClient, RabbitMqSenderImpl rabbitMQSender) {
+    public DocumentServiceImpl(
+            DocumentsDocumentRepository documentRepository,
+            DocumentsCorrespondentRepository correspondentRepository,
+            DocumentsDocumenttypeRepository doctypeRepository,
+            DocumentsStoragepathRepository storagepathRepository,
+            MinioClient minioClient,
+            RabbitMqSenderImpl rabbitMQSender,
+            ElasticDocumentDocumentRepository elasticDocumentDocumentRepository) {
         this.documentRepository = documentRepository;
         this.correspondentRepository = correspondentRepository;
         this.doctypeRepository = doctypeRepository;
         this.storagepathRepository = storagepathRepository;
         this.minioClient = minioClient;
         this.rabbitMQSender = rabbitMQSender;
+        this.elasticDocumentDocumentRepository = elasticDocumentDocumentRepository;
     }
 
     @Override
@@ -175,9 +189,21 @@ public class DocumentServiceImpl implements DocumentService {
         searchTemplate.setStoragePath(storagePath); // Assuming a default value is not needed or create a new DocumentsStoragepath instance
         searchTemplate.setOwner(null); // Assuming a default value is not needed or create a new AuthUser instance
 
-        List<DocumentsDocument> alldocs = documentRepository.findAll(Example.of(searchTemplate));
+        List<DocumentsDocument> alldocs = new ArrayList<>();
 
-        int maxIndex = Math.min( alldocs.size() , startingIndex + pageSize );
+        if(query != null && !query.isEmpty()) {
+            List<ElasticDocumentDocument> elasticResult = elasticDocumentDocumentRepository.fuzzySearch(query, Pageable.ofSize(pageSize == null ? 10 : pageSize)).getContent();
+            for (ElasticDocumentDocument doc : elasticResult) {
+                DocumentsDocument dbResult = documentRepository.findById(doc.getId()).orElse(null);
+                if (dbResult != null) {
+                    alldocs.add(dbResult);
+                }
+            }
+        } else {
+            alldocs = documentRepository.findAll(Example.of(searchTemplate));
+        }
+
+        int maxIndex = Math.min(alldocs.size() , startingIndex + pageSize );
 
         if (startingIndex>maxIndex) {
             startingIndex = maxIndex;
@@ -186,21 +212,20 @@ public class DocumentServiceImpl implements DocumentService {
         int previousId = 0;
         int nextId = 0;
 
-        if( alldocs.size() > 0 ){
+        if(!alldocs.isEmpty()){
             // Weird minmax bounds fix
             previousId = alldocs.get(Math.max(startingIndex - 1, 0)).getId();
             nextId = alldocs.get(Math.max(Math.min(maxIndex + 1, alldocs.size() - 1), 0)).getId();
             alldocs = alldocs.subList(startingIndex, maxIndex);
         }
 
-        ///TODO: add elastic search here
-        List<Integer> allIds = new ArrayList<Integer>();
+        List<Integer> allIds = new ArrayList<>();
         List<GetDocuments200ResponseResultsInner> results = new ArrayList<GetDocuments200ResponseResultsInner>();
         for (DocumentsDocument doc : alldocs) {
             GetDocuments200ResponseResultsInner dto = DocumentMapper.toOkInnerRes(doc);
             allIds.add(doc.getId());
 
-            if ( truncateContent == null ? true : truncateContent) {
+            if (truncateContent == null || truncateContent) {
                 String content = doc.getContent();
                 dto.content( content.substring(0, Math.min( Math.max(content.length()-1,0) ,47) ) + "..." );
             }
