@@ -189,7 +189,9 @@ public class DocumentServiceImpl implements DocumentService {
         searchTemplate.setStoragePath(storagePath); // Assuming a default value is not needed or create a new DocumentsStoragepath instance
         searchTemplate.setOwner(null); // Assuming a default value is not needed or create a new AuthUser instance
 
-        List<DocumentsDocument> alldocs = new ArrayList<>();
+
+        ///no search and elastic search
+        List<DocumentsDocument> alldocs = documentRepository.findAll(Example.of(searchTemplate));
 
         if(query != null && !query.isEmpty()) {
             List<ElasticDocumentDocument> elasticResult = elasticDocumentDocumentRepository.fuzzySearch(query, Pageable.ofSize(pageSize == null ? 10 : pageSize)).getContent();
@@ -219,7 +221,8 @@ public class DocumentServiceImpl implements DocumentService {
             alldocs = alldocs.subList(startingIndex, maxIndex);
         }
 
-        List<Integer> allIds = new ArrayList<>();
+
+        List<Integer> allIds = new ArrayList<Integer>();
         List<GetDocuments200ResponseResultsInner> results = new ArrayList<GetDocuments200ResponseResultsInner>();
         for (DocumentsDocument doc : alldocs) {
             GetDocuments200ResponseResultsInner dto = DocumentMapper.toOkInnerRes(doc);
@@ -235,7 +238,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         //Pack data in response Element
         GetDocuments200Response response = new GetDocuments200Response();
-        response.setCount(maxIndex-startingIndex+1);
+        response.setCount(maxIndex-startingIndex);
 
         response.setPrevious(previousId);
         response.setNext(nextId);
