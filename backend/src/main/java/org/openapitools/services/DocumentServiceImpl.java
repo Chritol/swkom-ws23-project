@@ -145,6 +145,8 @@ public class DocumentServiceImpl implements DocumentService {
 
             Boolean truncateContent
     ) {
+        log.info("Query: " + query + "; Ordering: " + ordering);
+
         int startingIndex =
                 page == null ?
                         0 :
@@ -181,12 +183,17 @@ public class DocumentServiceImpl implements DocumentService {
             startingIndex = maxIndex;
         }
 
-        int previousId = alldocs.get( Math.max(startingIndex-1,0) ).getId();
-        int nextId = alldocs.get( Math.min(maxIndex+1, alldocs.size()-1) ).getId();
-        alldocs = alldocs.subList(startingIndex, maxIndex);
+        int previousId = 0;
+        int nextId = 0;
 
-        log.info(alldocs.toString() + " documents");
+        if( alldocs.size() > 0 ){
+            // Weird minmax bounds fix
+            previousId = alldocs.get(Math.max(startingIndex - 1, 0)).getId();
+            nextId = alldocs.get(Math.max(Math.min(maxIndex + 1, alldocs.size() - 1), 0)).getId();
+            alldocs = alldocs.subList(startingIndex, maxIndex);
+        }
 
+        ///TODO: add elastic search here
         List<Integer> allIds = new ArrayList<Integer>();
         List<GetDocuments200ResponseResultsInner> results = new ArrayList<GetDocuments200ResponseResultsInner>();
         for (DocumentsDocument doc : alldocs) {
@@ -195,7 +202,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             if ( truncateContent == null ? true : truncateContent) {
                 String content = doc.getContent();
-                dto.content( content.substring(0, Math.min(content.length()-1 ,47) ) + "..." );
+                dto.content( content.substring(0, Math.min( Math.max(content.length()-1,0) ,47) ) + "..." );
             }
 
             results.add(dto);
