@@ -30,6 +30,10 @@ import java.util.Set;
 public class DocumentMapper {
 
     public static DocumentDTO toDto(DocumentsDocument entity) {
+        if(entity == null){
+            return null;
+        }
+
         DocumentDTO dto = new DocumentDTO();
 
         dto     //id
@@ -46,13 +50,15 @@ public class DocumentMapper {
                 .content(entity.getContent());
 
         Set<DocumentsDocumentTags> tagEntities = entity.getDocumentDocumentsDocumentTagses();
-        List<Integer> tagIds = new ArrayList<Integer>();
-        for (DocumentsDocumentTags tagEntitie:
-                tagEntities) {
-            tagIds.add(tagEntitie.getId());
+        if (tagEntities != null) {
+            List<Integer> tagIds = new ArrayList<Integer>();
+            for (DocumentsDocumentTags tagEntity :
+                    tagEntities) {
+                tagIds.add(tagEntity.getId());
+            }
+            dto     //tags
+                    .tags(tagIds);
         }
-        dto     //tags
-                .tags(tagIds);
 
         dto     //dateTime
                 .created(entity.getCreated())
@@ -69,6 +75,10 @@ public class DocumentMapper {
     }
 
     public static GetDocument200Response toOkRes(DocumentsDocument entity) {
+        if(entity == null){
+            return null;
+        }
+
         GetDocument200Response dto = new GetDocument200Response();
 
         dto     //id
@@ -119,6 +129,10 @@ public class DocumentMapper {
     }
 
     public static GetDocuments200ResponseResultsInner toOkInnerRes(DocumentsDocument entity) {
+        if(entity == null){
+            return null;
+        }
+
         GetDocuments200ResponseResultsInner dto = new GetDocuments200ResponseResultsInner();
 
         dto     //id
@@ -166,6 +180,10 @@ public class DocumentMapper {
     }
 
     public static DocumentsDocument toEntity(DocumentDTO dto) {
+        if(dto == null){
+            return null;
+        }
+
         return toEntity(dto, null, null, null);
     }
 
@@ -175,6 +193,10 @@ public class DocumentMapper {
             DocumentsDocumenttypeRepository doctypeRepository,
             DocumentsStoragepathRepository storagepathRepository
     ) {
+        if(dto == null){
+            return null;
+        }
+
         DocumentsDocument entity = new DocumentsDocument();
 
         //id
@@ -234,6 +256,10 @@ public class DocumentMapper {
 
 
     public static DocumentsDocument toEntity(GetDocument200Response dto) {
+        if(dto == null){
+            return null;
+        }
+
         DocumentsDocument entity = new DocumentsDocument();
 
         //id
