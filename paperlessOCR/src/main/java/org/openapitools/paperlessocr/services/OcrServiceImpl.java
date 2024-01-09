@@ -23,6 +23,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.NoSuchElementException;
 
+import static org.openapitools.paperlessocr.helper.OcrHelper.*;
+
 @Service
 @Slf4j
 public class OcrServiceImpl implements OcrService {
@@ -130,32 +132,5 @@ public class OcrServiceImpl implements OcrService {
         }
     }
 
-    public static void deleteTempFile(File tempPdfFile) {
-        try {
-            Files.deleteIfExists(tempPdfFile.toPath());
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
-    }
 
-    @Nullable
-    public static File createTempFile() {
-        File tempPdfFile;
-        try {
-            tempPdfFile = File.createTempFile("input", ".pdf");
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-            return null;
-        }
-        return tempPdfFile;
-    }
-
-    private static ElasticDocumentDocument convertToElasticDocumentDocument(DocumentsDocument document) {
-        return ElasticDocumentDocument.builder()
-                .id(document.getId())
-                .title(document.getTitle())
-                .content(document.getContent())
-                .filename(document.getStoragePath().getPath())
-                .build();
-    }
 }

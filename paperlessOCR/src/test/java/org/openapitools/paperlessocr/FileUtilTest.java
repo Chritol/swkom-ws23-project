@@ -1,5 +1,6 @@
 package org.openapitools.paperlessocr;
 
+import org.openapitools.paperlessocr.helper.OcrHelper;
 import org.openapitools.paperlessocr.services.OcrServiceImpl;
 
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ public class FileUtilTest {
     @Test
     void testCreateTempFile() {
         // Create a temporary file using the createTempFile method
-        File tempPdfFile = OcrServiceImpl.createTempFile();
+        File tempPdfFile = OcrHelper.createTempFile();
 
         // Assert that the file is not null
         assertNotNull(tempPdfFile);
@@ -27,19 +28,19 @@ public class FileUtilTest {
         assertTrue(tempPdfFile.getName().endsWith(TEMP_FILE_SUFFIX));
 
         // Clean up by deleting the temporary file
-        OcrServiceImpl.deleteTempFile(tempPdfFile);
+        OcrHelper.deleteTempFile(tempPdfFile);
     }
 
     @Test
     void testDeleteTempFile() {
         // Create a temporary file
-        File tempPdfFile = OcrServiceImpl.createTempFile();
+        File tempPdfFile = OcrHelper.createTempFile();
 
         // Assert that the file exists before deletion
         assertTrue(tempPdfFile.exists());
 
         // Delete the temporary file
-        OcrServiceImpl.deleteTempFile(tempPdfFile);
+        OcrHelper.deleteTempFile(tempPdfFile);
 
         // Assert that the file no longer exists after deletion
         assertFalse(tempPdfFile.exists());

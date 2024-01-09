@@ -23,14 +23,4 @@ public class ElasticsearchServiceImpl implements ElasticsearchService{
         elasticDocumentDocumentRepository.save(document);
         log.info("Document added to Elasticsearch: " + document);
     }
-
-    @Override
-    public void deletedDocumentById(Integer id) {
-        elasticDocumentDocumentRepository.deleteById(id);
-    }
-
-    @Override
-    public Optional<ElasticDocumentDocument> findById(Integer id) {
-        return elasticDocumentDocumentRepository.findById(id);
-    }
 }

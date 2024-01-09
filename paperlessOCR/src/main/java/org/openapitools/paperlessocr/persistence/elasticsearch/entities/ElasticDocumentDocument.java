@@ -18,6 +18,4 @@ public class ElasticDocumentDocument {
     private String title;
 
     private String content;
-
-    private String filename;
 }
