@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class
 )
 @ComponentScan(
-        basePackages = {"org.openapitools", "org.openapitools.api" , "org.openapitools.configuration", "org.openapitools.services", "org.openapitools.remapper", "org.openapitools.services", "org.openapitools.persistence.entities", "org.openapitools.persistence.repositories"},
+        basePackages = {"org.openapitools", "org.openapitools.api" , "org.openapitools.configuration", "org.openapitools.services", "org.openapitools.remapper", "org.openapitools.services", "org.openapitools.persistence.entities", "org.openapitools.persistence.repositories", "org.openapitools.persistence.elasticsearch.entities", "org.openapitools.persistence.elasticsearch.repositories"},
         nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class
 )
 @EnableJpaRepositories("org.openapitools.persistence.repositories")

@@ -9,6 +9,7 @@ import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.openapitools.paperlessocr.persistence.elasticsearch.entities.ElasticDocumentDocument;
 import org.openapitools.paperlessocr.persistence.entities.DocumentsDocument;
 import org.openapitools.paperlessocr.persistence.repositories.DocumentsDocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +29,16 @@ public class OcrServiceImpl implements OcrService {
     private final MinioClient minioClient;
     private final DocumentsDocumentRepository documentRepository;
 
+    private final ElasticsearchServiceImpl elasticsearchService;
+
     @Autowired
-    public OcrServiceImpl(MinioClient minioClient, DocumentsDocumentRepository documentRepository) {
+    public OcrServiceImpl(
+            MinioClient minioClient,
+            DocumentsDocumentRepository documentRepository,
+            ElasticsearchServiceImpl elasticsearchService) {
         this.minioClient = minioClient;
         this.documentRepository = documentRepository;
+        this.elasticsearchService = elasticsearchService;
     }
 
     @Value("${minio.bucketName}")
@@ -54,11 +61,7 @@ public class OcrServiceImpl implements OcrService {
         document.setContent(result);
 
         documentRepository.save(document);
-
-
-        if(result.isEmpty())
-            log.info("SAD:(");
-        log.info(result);
+        elasticsearchService.addDocument(convertToElasticDocumentDocument(document));
     }
 
     private String[] extractBucketAndFileName(String pdfFileName) {
@@ -145,5 +148,14 @@ public class OcrServiceImpl implements OcrService {
             return null;
         }
         return tempPdfFile;
+    }
+
+    private static ElasticDocumentDocument convertToElasticDocumentDocument(DocumentsDocument document) {
+        return ElasticDocumentDocument.builder()
+                .id(document.getId())
+                .title(document.getTitle())
+                .content(document.getContent())
+                .filename(document.getStoragePath().getPath())
+                .build();
     }
 }

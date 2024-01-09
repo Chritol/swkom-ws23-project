@@ -103,6 +103,7 @@ public class ApiApiController implements ApiApi {
         return ResponseEntity.ok( response );
     }
 
+
     public ResponseEntity<Resource> getDocumentPreview( Integer id ) {
         String resourcePath = documentServiceImpl.getResourcePath(id);
         byte[] getPdfData = documentServiceImpl.getPdfData(resourcePath);
