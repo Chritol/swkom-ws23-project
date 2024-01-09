@@ -27,6 +27,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Begründung:
+ * Kein mapping framework verwendet, sondern selbst geschrieben, weil Mapstruct, bei dieser Java nicht mit anderen modules zusammen gearbeitet hat, aber spring nich bei einer Version, wo Mapstruct ginge.
+ * Unter anderem ermöglicht das auch besseres mapping, weil die "Externals" nicht auch implimentiert werden müssen.
+ * Bei dieser menge an Usecases ist das auch noch kürzer.
+ */
 public class DocumentMapper {
 
     public static DocumentDTO toDto(DocumentsDocument entity) {
