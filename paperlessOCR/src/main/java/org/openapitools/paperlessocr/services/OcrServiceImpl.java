@@ -9,6 +9,7 @@ import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.openapitools.paperlessocr.persistence.elasticsearch.entities.ElasticDocumentDocument;
 import org.openapitools.paperlessocr.persistence.entities.DocumentsDocument;
 import org.openapitools.paperlessocr.persistence.repositories.DocumentsDocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,16 +23,24 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.NoSuchElementException;
 
+import static org.openapitools.paperlessocr.helper.OcrHelper.*;
+
 @Service
 @Slf4j
 public class OcrServiceImpl implements OcrService {
     private final MinioClient minioClient;
     private final DocumentsDocumentRepository documentRepository;
 
+    private final ElasticsearchServiceImpl elasticsearchService;
+
     @Autowired
-    public OcrServiceImpl(MinioClient minioClient, DocumentsDocumentRepository documentRepository) {
+    public OcrServiceImpl(
+            MinioClient minioClient,
+            DocumentsDocumentRepository documentRepository,
+            ElasticsearchServiceImpl elasticsearchService) {
         this.minioClient = minioClient;
         this.documentRepository = documentRepository;
+        this.elasticsearchService = elasticsearchService;
     }
 
     @Value("${minio.bucketName}")
@@ -54,11 +63,7 @@ public class OcrServiceImpl implements OcrService {
         document.setContent(result);
 
         documentRepository.save(document);
-
-
-        if(result.isEmpty())
-            log.info("SAD:(");
-        log.info(result);
+        elasticsearchService.addDocument(convertToElasticDocumentDocument(document));
     }
 
     private String[] extractBucketAndFileName(String pdfFileName) {
@@ -127,23 +132,5 @@ public class OcrServiceImpl implements OcrService {
         }
     }
 
-    private static void deleteTempFile(File tempPdfFile) {
-        try {
-            Files.deleteIfExists(tempPdfFile.toPath());
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
-    }
 
-    @Nullable
-    private static File createTempFile() {
-        File tempPdfFile;
-        try {
-            tempPdfFile = File.createTempFile("input", ".pdf");
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-            return null;
-        }
-        return tempPdfFile;
-    }
 }
