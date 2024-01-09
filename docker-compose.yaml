@@ -24,7 +24,7 @@ services:
     build:
       dockerfile: paperlessOCR/Dockerfile
     ports:
-      - "6969:6969"
+      - "8082:8082"
     depends_on:
       database:
         condition: service_healthy
