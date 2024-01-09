@@ -1,5 +1,7 @@
 package org.openapitools.helpers;
 
+import org.openapitools.persistence.entities.DocumentsStoragepath;
+
 import java.security.InvalidParameterException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -35,5 +37,39 @@ public class FileHelper {
         LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
         long milliseconds = localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
         return Long.toString(milliseconds);
+    }
+
+    public static String getMinioObjectName(String fileName) throws InvalidParameterException {
+        return FileHelper.getCurrentDateTimeInMilliseconds()
+                + "_"
+                + FileHelper.getFileName(fileName)
+                + "."
+                + FileHelper.getFileExtension(fileName);
+    }
+
+    public static DocumentsStoragepath getDocumentStoragePath(String filePath, String fileName) {
+        DocumentsStoragepath storagePath = new DocumentsStoragepath();
+        storagePath.setPath(removeUnwantedChars(filePath));
+        storagePath.setName(fileName);
+        storagePath.setMatch("");
+        storagePath.setMatchingAlgorithm(0);
+        storagePath.setIsInsensitive(false);
+
+        return storagePath;
+    }
+
+    public static String[] extractBucketAndFileName(String pdfFileName) {
+        // Assuming the format is "bucketName/path/to/file.pdf"
+        String[] parts = pdfFileName.split("/", 2);
+
+        if (parts.length > 1) {
+            return parts;
+        } else {
+            return null;
+        }
+    }
+
+    private static String removeUnwantedChars(String text){
+        return text.replaceAll("[^(\\x00-\\xFF)]+(?:$|\\s*)", "").trim();
     }
 }

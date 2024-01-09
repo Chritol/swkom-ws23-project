@@ -6,7 +6,4 @@ import java.util.Optional;
 
 public interface ElasticsearchService {
     void addDocument(ElasticDocumentDocument document);
-    void deletedDocumentById(Integer id);
-
-    Optional<ElasticDocumentDocument> findById(Integer id);
 }

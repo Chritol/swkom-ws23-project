@@ -5,6 +5,8 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.*;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.openapitools.helpers.FileHelper;
 import org.openapitools.model.DocumentDTO;
 import org.openapitools.model.okresponse.GetDocument200Response;
@@ -40,6 +42,8 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.openapitools.helpers.FileHelper.*;
+
 @Service
 @Slf4j
 public class DocumentServiceImpl implements DocumentService {
@@ -50,12 +54,11 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentsDocumenttypeRepository doctypeRepository;
     private final DocumentsStoragepathRepository storagepathRepository;
 
-    private final ElasticDocumentDocumentRepository elasticDocumentDocumentRepository;
-
+    private final ElasticsearchService elasticsearchService;
 
     private final MinioClient minioClient;
-
     private final RabbitMqSender rabbitMQSender;
+
 
     @Value("${minio.bucketName}")
     private String bucketName;
@@ -68,26 +71,23 @@ public class DocumentServiceImpl implements DocumentService {
             DocumentsStoragepathRepository storagepathRepository,
             MinioClient minioClient,
             RabbitMqSenderImpl rabbitMQSender,
-            ElasticDocumentDocumentRepository elasticDocumentDocumentRepository) {
+            ElasticsearchService elasticsearchService) {
         this.documentRepository = documentRepository;
         this.correspondentRepository = correspondentRepository;
         this.doctypeRepository = doctypeRepository;
         this.storagepathRepository = storagepathRepository;
         this.minioClient = minioClient;
         this.rabbitMQSender = rabbitMQSender;
-        this.elasticDocumentDocumentRepository = elasticDocumentDocumentRepository;
+        this.elasticsearchService = elasticsearchService;
+
+        log.info("DocumentServiceImpl created");
     }
 
     @Override
     public GetDocument200Response getDocument(Integer id, Integer page, Boolean fullPerms) {
         DocumentsDocument entity = documentRepository.getReferenceById(id);
-        GetDocument200Response response = DocumentMapper.toOkRes(entity);
 
-        return response;
-    }
-
-    private static String removeUnwantedChars(String text){
-        return text.replaceAll("[^(\\x00-\\xFF)]+(?:$|\\s*)", "").trim();
+        return DocumentMapper.toOkRes(entity);
     }
 
 
@@ -101,14 +101,6 @@ public class DocumentServiceImpl implements DocumentService {
         // Convert DTO to entity
         DocumentsDocument entity = DocumentMapper.toEntity(documentDTO, correspondentRepository, doctypeRepository, storagepathRepository);
 
-        String minioObjectName = "";
-        try {
-            minioObjectName = getMinioObjectName(document.getOriginalFilename());
-        } catch (InvalidParameterException e) {
-            log.error(e.getMessage(), e);
-            return null;
-        }
-
         //Everything I need to set before saving! :3
         entity.setCreated(OffsetDateTime.now());
         entity.setModified(OffsetDateTime.now());
@@ -120,6 +112,28 @@ public class DocumentServiceImpl implements DocumentService {
 
         log.info(id+"");
 
+        String filePath = storeInMinIo(document, id);
+        if (filePath == null) return null;
+
+        // Update path in database
+        entity.setStoragePath( getDocumentStoragePath(filePath, document.getOriginalFilename()) );
+        storagepathRepository.save(entity.getStoragePath());
+        documentRepository.save(entity);
+
+        rabbitMQSender.sendToDocumentInQueue(entity.getStoragePath().getPath());
+        documentDTO.getOriginalFileName().ifPresent(System.out::println);
+        return filePath;
+    }
+
+    @Nullable
+    private String storeInMinIo(MultipartFile document, Integer id) {
+        String minioObjectName = "";
+        try {
+            minioObjectName = getMinioObjectName(document.getOriginalFilename());
+        } catch (InvalidParameterException e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
         String filePath = bucketName + "/" + id.toString() + "-" + minioObjectName;
 
         try {
@@ -128,20 +142,6 @@ public class DocumentServiceImpl implements DocumentService {
             log.error(e.getMessage(), e);
             return null;
         }
-
-
-        //Everything I need to set before saving! :3
-        entity.setCreated(OffsetDateTime.now());
-        entity.setModified(OffsetDateTime.now());
-        entity.setAdded(OffsetDateTime.now());
-        entity.setId(id);
-        entity.setStoragePath( getDocumentStoragePath(filePath, document.getOriginalFilename()) );
-
-        storagepathRepository.save(entity.getStoragePath());
-        documentRepository.save(entity);
-
-        rabbitMQSender.sendToDocumentInQueue(entity.getStoragePath().getPath());
-        documentDTO.getOriginalFileName().ifPresent(System.out::println);
         return filePath;
     }
 
@@ -166,46 +166,20 @@ public class DocumentServiceImpl implements DocumentService {
                         0 :
                         (pageSize == null ? page : page*pageSize) ;
 
-        DocumentsDocument searchTemplate = new DocumentsDocument();
-
-        //externals
-        DocumentsCorrespondent correspondent = null;
-        if (correspondentId != null) {
-            correspondent = correspondentRepository.findById(correspondentId).orElse(null);
-        }
-
-        DocumentsDocumenttype documentType = null;
-        if (documentTypeId!= null) {
-            documentType = doctypeRepository.findById(documentTypeId).orElse(null);
-        }
-
-        DocumentsStoragepath storagePath = null;
-        if (storagePathIdIn!= null) {
-            storagePath = storagepathRepository.findById(storagePathIdIn).orElse(null);
-        }
-
-        searchTemplate.setCorrespondent(correspondent); // Assuming a default value is not needed or create a new DocumentsCorrespondent instance
-        searchTemplate.setDocumentType(documentType); // Assuming a default value is not needed or create a new DocumentsDocumenttype instance
-        searchTemplate.setStoragePath(storagePath); // Assuming a default value is not needed or create a new DocumentsStoragepath instance
-        searchTemplate.setOwner(null); // Assuming a default value is not needed or create a new AuthUser instance
-
-
-        ///no search and elastic search
-        List<DocumentsDocument> alldocs = documentRepository.findAll(Example.of(searchTemplate));
-
+        List<DocumentsDocument> alldocs;
         if(query != null && !query.isEmpty()) {
-            List<ElasticDocumentDocument> elasticResult = elasticDocumentDocumentRepository.fuzzySearch(query, Pageable.ofSize(pageSize == null ? 10 : pageSize)).getContent();
-            for (ElasticDocumentDocument doc : elasticResult) {
-                DocumentsDocument dbResult = documentRepository.findById(doc.getId()).orElse(null);
-                if (dbResult != null) {
-                    alldocs.add(dbResult);
-                }
-            }
+            List<ElasticDocumentDocument> elasticResult = elasticsearchService.fuzzySearch(
+                    query,
+                    page == null ? 0 : page,
+                    pageSize == null ? 10 : pageSize).getContent();
+
+            alldocs = getAllDocsFromElasticResult(elasticResult);
         } else {
+            DocumentsDocument searchTemplate = getSearchTemplate(documentTypeId, storagePathIdIn, correspondentId);
             alldocs = documentRepository.findAll(Example.of(searchTemplate));
         }
 
-        int maxIndex = Math.min(alldocs.size() , startingIndex + pageSize );
+        int maxIndex = Math.min(alldocs.size() , startingIndex + pageSize);
 
         if (startingIndex>maxIndex) {
             startingIndex = maxIndex;
@@ -220,8 +194,7 @@ public class DocumentServiceImpl implements DocumentService {
             nextId = alldocs.get(Math.max(Math.min(maxIndex + 1, alldocs.size() - 1), 0)).getId();
             alldocs = alldocs.subList(startingIndex, maxIndex);
         }
-
-
+        
         List<Integer> allIds = new ArrayList<Integer>();
         List<GetDocuments200ResponseResultsInner> results = new ArrayList<GetDocuments200ResponseResultsInner>();
         for (DocumentsDocument doc : alldocs) {
@@ -239,12 +212,9 @@ public class DocumentServiceImpl implements DocumentService {
         //Pack data in response Element
         GetDocuments200Response response = new GetDocuments200Response();
         response.setCount(maxIndex-startingIndex);
-
         response.setPrevious(previousId);
         response.setNext(nextId);
-
         response.setAll(allIds);
-
         response.setResults(results);
 
         //Return response Relement
@@ -252,38 +222,74 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
+    @NotNull
+    private List<DocumentsDocument> getAllDocsFromElasticResult(List<ElasticDocumentDocument> elasticResult) {
+        List<DocumentsDocument> docs = new ArrayList<>();
+        for (ElasticDocumentDocument doc : elasticResult) {
+            documentRepository.findById(doc.getId()).ifPresent(docs::add);
+        }
+        return docs;
+    }
+
+    @NotNull
+    private DocumentsDocument getSearchTemplate(Integer documentTypeId, Integer storagePathIdIn, Integer correspondentId) {
+        DocumentsDocument searchTemplate = new DocumentsDocument();
+
+        //externals
+        searchTemplate.setCorrespondent(getDocumentsCorrespondent(correspondentId)); // Assuming a default value is not needed or create a new DocumentsCorrespondent instance
+        searchTemplate.setDocumentType(getDocumentsDocumenttype(documentTypeId)); // Assuming a default value is not needed or create a new DocumentsDocumenttype instance
+        searchTemplate.setStoragePath(getDocumentsStoragepath(storagePathIdIn)); // Assuming a default value is not needed or create a new DocumentsStoragepath instance
+        searchTemplate.setOwner(null); // Assuming a default value is not needed or create a new AuthUser instance
+        return searchTemplate;
+    }
+
+    @Nullable
+    private DocumentsStoragepath getDocumentsStoragepath(Integer storagePathIdIn) {
+        DocumentsStoragepath storagePath = null;
+        if (storagePathIdIn != null) {
+            storagePath = storagepathRepository.findById(storagePathIdIn).orElse(null);
+        }
+        return storagePath;
+    }
+
+    @Nullable
+    private DocumentsDocumenttype getDocumentsDocumenttype(Integer documentTypeId) {
+        DocumentsDocumenttype documentType = null;
+        if (documentTypeId != null) {
+            documentType = doctypeRepository.findById(documentTypeId).orElse(null);
+        }
+        return documentType;
+    }
+
+    @Nullable
+    private DocumentsCorrespondent getDocumentsCorrespondent(Integer correspondentId) {
+        DocumentsCorrespondent correspondent = null;
+        if (correspondentId != null) {
+            correspondent = correspondentRepository.findById(correspondentId).orElse(null);
+        }
+        return correspondent;
+    }
+
     @Override
     public String getResourcePath(Integer id) {
         DocumentsDocument doc = documentRepository.findById(id).orElseThrow();
-        String path = doc.getStoragePath().getPath();
 
-        return path;
-    }
-
-    private String[] extractBucketAndFileName(String pdfFileName) {
-        // Assuming the format is "bucketName/path/to/file.pdf"
-        String[] parts = pdfFileName.split("/", 2);
-
-        if (parts.length > 1) {
-            return parts;
-        } else {
-            return null;
-        }
+        return doc.getStoragePath().getPath();
     }
 
     public byte[] getPdfData(String pdfFilePath) {
         if(!pdfFilePath.endsWith(".pdf")) {
             log.info("Only pdf files are currently supported for OCR. File not processable: " + pdfFilePath);
-            //return null;
         }
 
         String[] bucketAndFileName = extractBucketAndFileName(pdfFilePath);
-        //if(bucketAndFileName == null) return null;
+        if(bucketAndFileName == null) {
+            log.info("Could not extract bucket and file name from: " + pdfFilePath);
+            return null;
+        }
 
         log.info(bucketAndFileName[0] +", "+ bucketAndFileName[1]);
-
         String bucketName = bucketAndFileName[0];
-        String fileName = bucketAndFileName[1];
 
         try (InputStream stream = minioClient.getObject(
                 GetObjectArgs.builder()
@@ -300,7 +306,6 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private void storeInMinIO(MultipartFile file, String path) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-
         minioClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(bucketName)
@@ -311,26 +316,4 @@ public class DocumentServiceImpl implements DocumentService {
         );
         log.info("Stored object in minIO: " + path);
     }
-
-    private static String getMinioObjectName(String fileName) throws InvalidParameterException {
-        return FileHelper.getCurrentDateTimeInMilliseconds()
-                + "_"
-                + FileHelper.getFileName(fileName)
-                + "."
-                + FileHelper.getFileExtension(fileName);
-    }
-
-    private static DocumentsStoragepath getDocumentStoragePath(String filePath, String fileName) {
-        DocumentsStoragepath storagePath = new DocumentsStoragepath();
-        storagePath.setPath(removeUnwantedChars(filePath));
-        storagePath.setName(fileName);
-        storagePath.setMatch("");
-        storagePath.setMatchingAlgorithm(0);
-        storagePath.setIsInsensitive(false);
-
-        return storagePath;
-    }
-
-
-
 }
