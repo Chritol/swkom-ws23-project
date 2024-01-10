@@ -69,7 +69,7 @@ public class FileHelper {
         }
     }
 
-    private static String removeUnwantedChars(String text){
+    public static String removeUnwantedChars(String text){
         return text.replaceAll("[^(\\x00-\\xFF)]+(?:$|\\s*)", "").trim();
     }
 }
